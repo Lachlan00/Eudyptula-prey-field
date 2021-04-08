@@ -1,0 +1,17 @@
+{
+ "vars": "Sv_mean",
+"dr":        1,
+"gridsize": [      0.2,      0.2,        1 ],
+"polygon_fn": "kriging/assets/kriging_field/survey-coast-straight_poly.rds",
+"xy_res":        2,
+"nmini":        3,
+"nmaxi":       10,
+"radius": [       50,       50,       20 ],
+"flag.sector": false,
+"nsect":        2,
+"nsmax":       12,
+"flag.continuous": true,
+"flag.linked": false,
+"linear.transform": true,
+"normalise.data": true 
+}

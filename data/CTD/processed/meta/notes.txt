@@ -1,0 +1,17 @@
+CTD processing notes
+
+2019-11-26
+1. All files extracted
+	- Files extraction indicates corruption but can be extracted from terminal using `unzip file.zip`
+	- If still corrupted can fix using `zip -FF input.zip --out output.zip`
+2. Files placed in single folder
+
+R (scripts/CTD_Processing.R)
+1. All files checked for id (minus extension)
+2. All ids contained 1 csv file
+3. csv files copied to master direcotry (processed/casts)
+
+2019 was raw csv files instead of processed so have converted these files again in CTD_CastAway software. 
+
+Manual_locations.csv
+	Note: the seconds of the datetimes was lost due to processing in Excel (stupid program). Do not need these though as just need to line up the cast IDs with the GPS times. 
