@@ -69,6 +69,11 @@ colnames(G.pengs)[1] <- 'id'
 # Merge
 peng.data.norep <- rbind(G.pengs, L.pengs)
 
+# separate sex
+male <- sapply(peng.data.norep$id, function(id) grepl('m|M', id))
+peng.data.norep$sex <- 'f'
+peng.data.norep$sex[male] <- 'm'
+
 # Also load and plot acoustics
 surveys = c('2015_S1','2016_S2','2017_S2','2018_S2','2019_S2')
 krig.dfs <- load.krig.dbs('Sv_mean', surveys, return_items = T)
@@ -106,6 +111,7 @@ if (FALSE){
       peng.data.norep$`2019`$date <= as.Date('2019-10-09'),]
   # Rebind
   peng.data.norep <- do.call(rbind, peng.data.norep)
+  row.names(peng.data.norep) <- NULL
 }
 
 # STATS
@@ -114,13 +120,17 @@ grand.mean <- mean(peng.data.norep$weight1)
 peng.data.norep$diffs <- peng.data.norep$weight1 - grand.mean
 p.list.weight  <- list()
 i <- 1
-mesage('weight')
+message('weight')
 for (YEAR in 2015:2019){
   message(YEAR)
   p.list.weight[[i]] <- t.test(peng.data.norep$diffs[peng.data.norep$year == YEAR])
+  #p.list.weight[[i]] <- glm(diffs ~ year*sex, data=peng.data.norep)
   print(p.list.weight[[i]]$p.value)
   i <- i + 1
 }
+peng.data.norep$year <- as.factor(peng.data.norep$year)
+summary(glm(diffs ~ year*sex, data=peng.data.norep))
+        
 # Report numbers
 # Basic stats  test (with pseudoreplication accounted for)
 grand.mean <- mean(krig.dfs$linear)
@@ -135,28 +145,41 @@ for (YEAR in 2015:2019){
   i <- i + 1
 }
 
+summary(glm(diffs ~ year, data=krig.dfs))
+
+
 # Plot based on year
 text.weight <- pvalString(unlist(lapply(p.list.weight, function(x) x$p.value)))
 text.weight <- data.frame(x=as.factor(2015:2019), y=-230, label=text.weight)
 N.peng <- table(year(peng.data.norep$date))
-N.peng <- data.frame(x=as.factor(2015:2019), y=c(0,30,-20,42,-1), label=as.vector(N.peng))
-p1 <- ggplot(peng.data.norep, aes(x=as.factor(year(date)), y=diffs)) +
-  geom_hline(yintercept = 0, color='darkred', linetype='dashed', size=.7) +
-  geom_boxplot(fill='#E59E7C', alpha=1) +
-  labs(x=NULL, y='Weight anomaly (g)') +
-  theme_bw() + grids(linetype = "dashed") +
-  theme(text = element_text(size=14)) +
-  theme(legend.position = "none") +
-  xlab(NULL) +
-  ylim(-240,230) +
-  geom_label(data=text.weight, mapping=aes(x=x, y=y, label=label), 
-             inherit.aes = F, fill='#E59E7C', alpha=1) +
-  geom_text(data=N.peng, mapping=aes(x=x, y=y, label=paste0('N=',label)), 
-             inherit.aes = F)
-  
+N.peng <- data.frame(x=as.factor(2015:2019), 
+                     y=-230, #c(0,30,-20,42,-1), 
+                     label=as.vector(N.peng),
+                     m=as.vector(table(year(peng.data.norep$date[peng.data.norep$sex == 'm']))),
+                     f=as.vector(table(year(peng.data.norep$date[peng.data.norep$sex == 'f']))))
+N.peng$label.sex <- paste0(N.peng$label,'\n(F',N.peng$f,':M',N.peng$m,')')
+
+###########################################################
+# Use updated code for new p1 plot (revisions/peng_wts.R) #
+###########################################################
+# p1 <- ggplot(peng.data.norep, aes(x=as.factor(year(date)), y=diffs, fill=as.factor(toupper(sex)))) +
+#   geom_hline(yintercept = 0, color='darkred', linetype='dashed', size=.7) +
+#   geom_boxplot( alpha=1) + #fill='#E59E7C'
+#   labs(x=NULL, y='Weight anomaly (g)') +
+#   theme_bw() + grids(linetype = "dashed") +
+#   theme(text = element_text(size=14)) +
+#   #theme(legend.position = "none") +
+#   xlab(NULL) +
+#   ylim(-240,230) +
+#   labs(fill='Sex') +
+#   # geom_label(data=text.weight, mapping=aes(x=x, y=y, label=label), 
+#   #            inherit.aes = F, fill='#E59E7C', alpha=1) +
+#   geom_text(data=N.peng, mapping=aes(x=x, y=y, label=paste0('N=',label.sex)), 
+#              inherit.aes = F)
 
 text.Sv <- pvalString(unlist(lapply(p.list.Sv, function(x) x$p.value)))
 text.Sv <- data.frame(x=as.factor(2015:2019), y=-2.7e-06, label=text.Sv)
+
 p2 <- ggplot(krig.dfs, aes(x=as.factor(year), y=diffs)) +
   geom_hline(yintercept = 0, color='darkred', linetype='dashed', size=.7) +
   geom_boxplot(fill='grey', alpha=.6, outlier.shape = NA) +
@@ -168,10 +191,10 @@ p2 <- ggplot(krig.dfs, aes(x=as.factor(year), y=diffs)) +
   geom_label(data=text.Sv, mapping=aes(x=x, y=y, label=label), 
              inherit.aes = F, fill='grey', alpha=.6)
 
-p3 <- ggarrange(p1, p2, ncol=1)
+p3 <- ggarrange(p1, p2, ncol=1, common.legend = T)
 
 ggsave(p3, filename='output/paper_figures/simulation_paper/penguinWeight.png',
-       dpi=300, width=3750/300, height=3000/300) 
+       dpi=300, width=3750/300, height=3000/300, bg='white') 
 
 
 
