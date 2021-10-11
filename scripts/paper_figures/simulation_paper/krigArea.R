@@ -9,6 +9,7 @@ library(beepr)
 library(tools)
 library(raster)
 library(momentuHMM)
+library(directlabels)
 
 source('scripts/Eudyptula.R')
 
@@ -127,13 +128,13 @@ p.3d <- slice3D(lon, lat, z, colvar = p,
         ys = lat[c(1)],
         zs = c(z[c(1,8,18,30)]),
         d = 1,
-        xlab="Longitude",
-        ylab="Latitude",
-        zlab="Depth (m)",
+        xlab="",
+        ylab="",
+        zlab="",
         clab='Sv mean',
         ticktype="detailed",
-        cex.axis=1.3,
-        cex.lab=1.3)
+        cex.axis=1.7)
+        #cex.lab=1.3)
 dev.off()
 
 #############################
@@ -180,7 +181,7 @@ for (i in 1:length(landShpT@polygons)){
 }
 
 # # Plot
-# p.maps <- ggplot(krig.dfs, aes(x=lon, y=lat, fill=Kriging.Sv_mean.estim)) + 
+# p.maps <- ggplot(krig.dfs, aes(x=lon, y=lat, fill=Kriging.Sv_mean.estim)) +
 #   geom_raster() +
 #   scale_fill_gradientn(colours=cmap, limits=c(vmin, vmax), na.value="grey66",
 #                        guide=guide_colorbar(barwidth=25, frame.colour=c("black"))) +
@@ -198,23 +199,21 @@ for (i in 1:length(landShpT@polygons)){
 
 coast <- raster::crop(landShp, extent(xlim, ylim))
 
-p.maps <- ggplot()  +  
-  geom_raster(data = krig.dfs, aes(x=lon, y=lat, fill=Kriging.Sv_mean.estim)) +
-  scale_fill_gradientn(colours=cmap, limits=c(vmin, vmax), na.value="grey66",
-                       guide=guide_colorbar(barwidth=25, frame.colour=c("black"))) +
-  theme_bw() + #grids(linetype = "dashed") +
-  labs(x=NULL, y=NULL, alpha=NULL, size=NULL, fill=NULL) +
-  theme(text = element_text(size=17)) +
-  theme(legend.position = "bottom") +
-  geom_density_2d(data=tracks, mapping=aes(x=lon, y=lat), col='white', alpha=.5,
-                  inherit.aes = F) +
-  geom_polygon(data=coast, mapping=aes(x=long, y=lat, group=group),
-               fill='grey', col='#636363', size=.6, alpha=1, inherit.aes = F)+
-  facet_wrap(~survey) +
-  coord_cartesian(xlim=xlim,  ylim=ylim, expand=c(0,0))
+# p.maps <- ggplot()  +  
+#   geom_raster(data = krig.dfs, aes(x=lon, y=lat, fill=Kriging.Sv_mean.estim)) +
+#   scale_fill_gradientn(colours=cmap, limits=c(vmin, vmax), na.value="grey66",
+#                        guide=guide_colorbar(barwidth=25, frame.colour=c("black"))) +
+#   theme_bw() + #grids(linetype = "dashed") +
+#   labs(x=NULL, y=NULL, alpha=NULL, size=NULL, fill=NULL) +
+#   theme(text = element_text(size=18)) +
+#   theme(legend.position = "bottom") +
+#   stat_density_2d(data=tracks, mapping=aes(x=lon, y=lat), col='white', alpha=.5,
+#                   inherit.aes = F, size=.4) +
+#   geom_polygon(data=coast, mapping=aes(x=long, y=lat, group=group),
+#                fill='grey', col='#636363', size=.6, alpha=1, inherit.aes = F)+
+#   facet_wrap(~survey) +
+#   coord_cartesian(xlim=xlim,  ylim=ylim, expand=c(0,0))
 
 # Save p.maps
-ggsave(p.maps, filename='output/paper_figures/simulation_paper/krigMap_pengs.png',
-       bg="transparent",dpi=300, width=3500/300, height=3000/300)
-
-
+# ggsave(p.maps, filename='output/paper_figures/simulation_paper/krigMap_pengs.png',
+#        bg="transparent",dpi=300, width=3500/300, height=3000/300)
