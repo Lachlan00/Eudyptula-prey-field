@@ -56,8 +56,9 @@ p1 <- ggplot(d1, aes(year, diffs1, fill=sex)) +
   theme(legend.position = "top") +
   ylab("Mass anomaly (g)") +
   xlab(element_blank()) +
+  labs(fill='Sex') +
   theme_bw() +
-  theme(text = element_text(size=14))
+  theme(text = element_text(size=18))
 
 # get 2017 female % deviation from mean
 grand.fmean <- mean(d1[d1$sex == 'Female','weight1'])

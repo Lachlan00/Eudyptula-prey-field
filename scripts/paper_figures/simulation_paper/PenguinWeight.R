@@ -183,9 +183,9 @@ text.Sv <- data.frame(x=as.factor(2015:2019), y=-2.7e-06, label=text.Sv)
 p2 <- ggplot(krig.dfs, aes(x=as.factor(year), y=diffs)) +
   geom_hline(yintercept = 0, color='darkred', linetype='dashed', size=.7) +
   geom_boxplot(fill='grey', alpha=.6, outlier.shape = NA) +
-  labs(x=NULL, y='Sv mean anomaly (linear)') +
+  labs(x=NULL, y='Sv mean anomaly (linear)', fill="Sex") +
   theme_bw() + grids(linetype = "dashed") +
-  theme(text = element_text(size=14)) +
+  theme(text = element_text(size=18)) +
   theme(legend.position = "none") +
   ylim(-2.75e-06, 1.3e-06) +
   geom_label(data=text.Sv, mapping=aes(x=x, y=y, label=label), 

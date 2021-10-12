@@ -76,7 +76,7 @@ p.surveyMap <- ggplot() +
   coord_map(xlim=xlim,  ylim=ylim) +
   theme_bw() + grids(linetype = "dashed") +
   labs(x=NULL, y=NULL, alpha=NULL, size=NULL) +
-  theme(text = element_text(size=14))
+  theme(text = element_text(size=20))
 
 # --- Make Map Inset --- #
 # map rect extent
@@ -108,6 +108,6 @@ gg_transaprent <- theme(plot.background = element_rect(fill = "transparent", col
 # Save files
 ggsave(p.surveyMap + gg_transaprent, filename='output/paper_figures/simulation_paper/mapMain_main.png',
        bg="transparent",dpi=300, width=3000/300, height=3000/300)
-ggsave(p.inset + gg_transaprent, filename='output/paper_figures/simulation_paper/mapMain_inset.png',
+ ggsave(p.inset + gg_transaprent, filename='output/paper_figures/simulation_paper/mapMain_inset.png',
        bg="transparent",dpi=300, width=600/300, height=600/300)
 
