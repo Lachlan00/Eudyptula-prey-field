@@ -1299,6 +1299,7 @@ shapefile.filter <- function(df, shp="assets/shp/baranguba_radius/baranguba_radi
 # Deletes tracks that leave a spaefile region
 inside.survey.zone <- function(tracks, threshold=0, UTM=FALSE, 
                                plot.map=FALSE, plot.title=NULL,
+                               use.percentage=FALSE, add.inZone.col=F,
                                shp="./assets/shp/survey-coast/survey_coast_straight"){
   df <- tracks
   print('Loading shapefile data..')
@@ -1335,13 +1336,16 @@ inside.survey.zone <- function(tracks, threshold=0, UTM=FALSE,
 
   # Split the dataframe
   df.ls <- split(df, df$id)
-  # For each track see if it leaves survey area
-  df.ls <- lapply(df.ls, function(df) sum(!df$inZone, na.rm=T) > threshold)
+  # For each track see if it leaves survey area (use percentage or absolute count)
+  if (use.percentage){
+    df.ls <- lapply(df.ls, function(df) sum(!df$inZone, na.rm=T)/nrow(df[!is.na(df$inZone),])*100 > threshold)
+  } else {
+    df.ls <- lapply(df.ls, function(df) sum(!df$inZone, na.rm=T) > threshold)
+  }
   inside <- names(df.ls)[!unlist(df.ls)]
   dropped <- names(df.ls)[!unique(tracks$id) %in% inside]
   message(length(dropped),' tracks dropped..')
   #print(dropped)
-  
   # make before map if requested
   if (plot.map){
     tracks.before <- tracks
@@ -1355,6 +1359,11 @@ inside.survey.zone <- function(tracks, threshold=0, UTM=FALSE,
                      custom.limits=custom.limits) +
       geom_polygon(data=zone, aes(x=long, y=lat, group=group), 
                    fill='transparent', col='grey', size=1.8)
+  }
+  
+  # Add inside column
+  if (add.inZone.col){
+    tracks$inZone <- df$inZone
   }
   
   # filter

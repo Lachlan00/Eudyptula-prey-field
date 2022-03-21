@@ -7,7 +7,8 @@ source('./scripts/eudyptula.R')
 # Analysis paramters
 depth = 30 # How deep to get the mean of Sv mean
 weight.depth = T # Weight the depth aggregation by penguin diving behaviour
-boundary_thresh = 10 # Filter tracks with points > N outside survey boundary
+boundary_thresh = 100 # Filter tracks with points > N outside survey boundary
+thresh.use.percentage = T # Above filter becomes percentage of points outside survey area
 track_regTime = 5 # Time between fixes in minutes (match to tracks)
 bootstrap_N = 100000 # Iterations for bootstrap test
 equalise_tracks = F # Reduce real tracks so equal number for each year?
@@ -22,10 +23,10 @@ tracks.real <- readRDS('./data/analysis_datasets/cumsum/tracks_real.rds')
 tracks.sim <- readRDS('./data/analysis_datasets/cumsum/tracks_sim.rds')
 
 # Filter tracks that leave the survey area
-tracks.real <- inside.survey.zone(tracks.real, threshold=boundary_thresh, 
-                                  plot.map=F, plot.title='Real Tracks')
-tracks.sim <- inside.survey.zone(tracks.sim, threshold=boundary_thresh,
-                                 plot.map=F, plot.title='Simulated Tracks')
+tracks.real <- inside.survey.zone(tracks.real, threshold=boundary_thresh, add.inZone.col=T, 
+                                  plot.map=F, plot.title='Real Tracks', use.percentage=thresh.use.percentage)
+tracks.sim <- inside.survey.zone(tracks.sim, threshold=boundary_thresh, add.inZone.col=T,
+                                 plot.map=F, plot.title='Simulated Tracks', use.percentage=thresh.use.percentage)
 # make a secondary set of simulations that don't use the area to the north
 # that wasn't sampled in 2015
 # filter all simulations that went north of -36.235 lat
@@ -90,7 +91,12 @@ if (weight.depth){
 # Convert to linear
 tracks.real$Sv_linear <- Sv_mean.linear(tracks.real$krig_Sv_mean)
 # Interporlate missing values linearly
-tracks.real$Sv_linear <- na.approx(tracks.real$Sv_linear)
+# Update! Don't interporalte, just remove
+#tracks.real$Sv_linear <- na.approx(tracks.real$Sv_linear)
+tracks.real <- tracks.real[!is.na(tracks.real$Sv_linear),]
+# Remove points outside of zone
+tracks.real <- tracks.real[tracks.real$inZone,]
+
 # Calculate cumulatice preyfield
 tracks.real <- tracks.cumsum.Sv(tracks.real)
 track.real.counts <- tracksCount.report(tracks.real, split.var=tracks.real$survey_id)
@@ -102,8 +108,8 @@ tracks.real.ls <- split(tracks.real, tracks.real$survey_id)
 # Analysis #
 ############
 # list for plots
-plt.lines <-list()
-plt.box <-list()
+plt.lines <- list()
+plt.box <- list()
 plt.boot.hist <- list()
 stat.tests <- list()
 analysis.ls <- list()
@@ -147,6 +153,8 @@ for (i in 1:length(tracks.real.ls)){
   }
   # Convert to linear
   track.sims.active$Sv_linear <- Sv_mean.linear(track.sims.active$krig_Sv_mean)
+  # Remove points outside of zone
+  track.sims.active <- track.sims.active[track.sims.active$inZone,]
   # Calculate cumulatice preyfield
   track.sims.active <- tracks.cumsum.Sv(track.sims.active)
   
@@ -239,5 +247,5 @@ print(data.frame(survey=names(tracks.real.ls),
 
 beep()
 # Save data for better plotting later
-saveRDS(analysis.ls, './data/analysis_datasets/cumsum/simPaper_analysis.rds')
-saveRDS(stat.tests, './data/analysis_datasets/cumsum/simPaper_stats.rds')
+# saveRDS(analysis.ls, './data/analysis_datasets/cumsum/simPaper_analysis.rds')
+# saveRDS(stat.tests, './data/analysis_datasets/cumsum/simPaper_stats.rds')
