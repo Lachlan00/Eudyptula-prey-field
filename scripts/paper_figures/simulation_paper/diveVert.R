@@ -119,15 +119,15 @@ p.vert <- ggplot(data=NULL) +
   ylab('Density of dive depths') + xlab('Depth (m)') +
   scale_y_continuous(sec.axis = sec_axis(~rescale(.,
       to=c(min(Sv_vert$Kriging.Sv_mean.estim), max(Sv_vert$Kriging.Sv_mean.estim))), 
-      name="Acoustic density (Sv)")) +
+      name="Acoustic density (Sv mean)")) +
   coord_flip() +
   scale_x_reverse(limits=c(30,0)) +
   facet_wrap(~year, strip.position='right') +
   theme_bw() + grids(linetype = "dashed") +
-  theme(text = element_text(size=14)) +
+  theme(text = element_text(size=16)) +
   theme(strip.background = element_rect(fill="#f2f2f2", colour="black"),
         strip.placement = "outside", 
-        strip.text = element_text(size=12))
+        strip.text = element_text(size=16))
 
 ggsave(p.vert, filename='output/paper_figures/simulation_paper/diveVert_sameAxis.png',
       dpi=300, width=3500/300, height=3000/300)

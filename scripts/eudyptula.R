@@ -2922,6 +2922,9 @@ load.survey.times <- function(survey_time_fn='./data/transects/survey_times.csv'
 # I do this alot so just a shorcut function
 # Resets the index and drops extra id factor levels
 rows.and.levels <- function(df, idcol='id'){
+  if (!is.factor(df[, idcol])){
+    df[, idcol] <- as.factor(df[, idcol])
+  } 
   df[, idcol] <- droplevels(df[, idcol])
   row.names(df) <- NULL
   return(df)

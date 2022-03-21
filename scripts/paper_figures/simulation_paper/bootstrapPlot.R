@@ -58,7 +58,7 @@ p.boot <- ggplot(boot.df.diff, aes(x=year, y=means)) +
   geom_hline(data=NULL, mapping=aes(yintercept=0), color='#2980b9', 
              linetype='dashed', size=1.08) +
   theme_bw() + grids(linetype = "dashed") +
-  theme(text = element_text(size=14)) +
+  theme(text = element_text(size=20)) +
   theme(legend.position = "none") +
   xlab(NULL) + ylab('Search efficiency (Sv mean anomaly)') + 
   coord_flip()

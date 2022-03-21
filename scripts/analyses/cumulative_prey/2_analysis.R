@@ -26,6 +26,19 @@ tracks.real <- inside.survey.zone(tracks.real, threshold=boundary_thresh,
                                   plot.map=F, plot.title='Real Tracks')
 tracks.sim <- inside.survey.zone(tracks.sim, threshold=boundary_thresh,
                                  plot.map=F, plot.title='Simulated Tracks')
+# make a secondary set of simulations that don't use the area to the north
+# that wasn't sampled in 2015
+# filter all simulations that went north of -36.235 lat
+tracks.sim.2015 <- split(tracks.sim, factor(tracks.sim$id))
+for (i in 1:length(tracks.sim.2015)){
+  if (max(tracks.sim.2015[[i]]$lat) > -36.235){
+    tracks.sim.2015[[i]] <- NA
+  }
+}
+tracks.sim.2015 <- tracks.sim.2015[!is.na(tracks.sim.2015)]
+tracks.sim.2015 <- do.call(rbind, tracks.sim.2015)
+
+# Report track info
 tracksCount.report(tracks.real, tracks.real$survey_id)
 
 # Equalise tracks
@@ -61,10 +74,10 @@ if (weight.depth){
   dive.weights <- rows.and.levels(dive.weights, idcol='survey_id')
 }
 
-
 # create an index column
 tracks.real <- tracks.add.indexes(tracks.real)
 tracks.sim <- tracks.add.indexes(tracks.sim)
+tracks.sim.2015 <- tracks.add.indexes(tracks.sim.2015)
 
 # Get covariate data for  real tracks
 if (weight.depth){
@@ -102,24 +115,44 @@ for (i in 1:length(tracks.real.ls)){
   tracks.real <- tracks.real.ls[[i]]
   # Process the simulations
   # Get Sv mean (convert to UTM only on first pass)
+  # For other sims that is i == 2
   if (weight.depth) {
-    tracks.sim <- db.extract.covar.depth(tracks.sim, method='weight', 
-                                         convert2UTM=ifelse(i==1,T,F),  
-                                         var='Sv_mean', survey=survey,
-                                         weight.df = dive.weights)
+    if (survey == '2015_S1'){
+      tracks.sim.2015 <- db.extract.covar.depth(tracks.sim.2015, method='weight', 
+                                           convert2UTM=T,  
+                                           var='Sv_mean', survey=survey,
+                                           weight.df = dive.weights)
+    } else {
+      tracks.sim <- db.extract.covar.depth(tracks.sim, method='weight', 
+                                           convert2UTM=ifelse(i==2,T,F),  
+                                           var='Sv_mean', survey=survey,
+                                           weight.df = dive.weights)
+    }
   } else {
-    tracks.sim <- db.extract.covar.depth(tracks.sim, depth=depth, 
-                                         convert2UTM=ifelse(i==1,T,F),  
-                                         var='Sv_mean', survey=survey)
+    if (survey == '2015_S1'){
+      tracks.sim.2015 <- db.extract.covar.depth(tracks.sim.2015, depth=depth, 
+                                           convert2UTM=T,  
+                                           var='Sv_mean', survey=survey)
+    } else {
+      tracks.sim <- db.extract.covar.depth(tracks.sim, depth=depth, 
+                                           convert2UTM=ifelse(i==2,T,F),  
+                                           var='Sv_mean', survey=survey)
+    }
+  }
+  # set what sims we are using
+  if (survey == '2015_S1'){
+    track.sims.active <- tracks.sim.2015
+  } else {
+    track.sims.active <- tracks.sim
   }
   # Convert to linear
-  tracks.sim$Sv_linear <- Sv_mean.linear(tracks.sim$krig_Sv_mean)
+  track.sims.active$Sv_linear <- Sv_mean.linear(track.sims.active$krig_Sv_mean)
   # Calculate cumulatice preyfield
-  tracks.sim <- tracks.cumsum.Sv(tracks.sim)
+  track.sims.active <- tracks.cumsum.Sv(track.sims.active)
   
   # Now create an analysis dataframe
   df.analysis <- rbind(tracks.real[,c('id','rank','type','Sv_linear_cumsum')],
-                       tracks.sim[,c('id','rank','type','Sv_linear_cumsum')])
+                       track.sims.active[,c('id','rank','type','Sv_linear_cumsum')])
   df.analysis <- rows.and.levels(df.analysis)
   
   # Now for each track, calulcate the consumption rate per hour
