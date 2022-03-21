@@ -182,7 +182,7 @@ text.Sv <- data.frame(x=as.factor(2015:2019), y=-2.7e-06, label=text.Sv)
 
 p2 <- ggplot(krig.dfs, aes(x=as.factor(year), y=diffs)) +
   geom_hline(yintercept = 0, color='darkred', linetype='dashed', size=.7) +
-  geom_boxplot(fill='grey', alpha=.6, outlier.shape = NA) +
+  geom_boxplot(fill='grey', alpha=.6) +#, outlier.shape = NA) +
   labs(x=NULL, y='Sv mean anomaly (linear)', fill="Sex") +
   theme_bw() + grids(linetype = "dashed") +
   theme(text = element_text(size=18)) +
@@ -194,7 +194,7 @@ p2 <- ggplot(krig.dfs, aes(x=as.factor(year), y=diffs)) +
 p3 <- ggarrange(p1, p2, ncol=1, common.legend = T)
 
 ggsave(p3, filename='output/paper_figures/simulation_paper/penguinWeight.png',
-       dpi=300, width=3750/300, height=3000/300, bg='white') 
+       dpi=300, width=3750/300, height=3000/300, bg='white')
 
 
 
