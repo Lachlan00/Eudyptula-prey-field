@@ -12,6 +12,7 @@ library(momentuHMM)
 library(directlabels)
 
 source('scripts/Eudyptula.R')
+source('scripts/kde_percent.R')
 
 weight.depth = TRUE
 

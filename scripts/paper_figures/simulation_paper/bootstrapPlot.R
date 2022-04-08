@@ -64,6 +64,10 @@ p.boot <- ggplot(boot.df.diff, aes(x=year, y=means)) +
   coord_flip()
 
 ggsave(p.boot, filename='output/paper_figures/simulation_paper/bootPlot_pre.png',
-       dpi=300, width=2500/300, height=2000/300)   
+       dpi=300, width=2500/300, height=2000/300)  
+
+# report 
+aggregate(means ~ year, data=boot.df.diff, mean)
+aggregate(means ~ year, data=boot.df.diff, sd)
              
              

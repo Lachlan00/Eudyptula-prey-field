@@ -7,7 +7,7 @@ source('./scripts/eudyptula.R')
 # Analysis paramters
 depth = 30 # How deep to get the mean of Sv mean
 weight.depth = T # Weight the depth aggregation by penguin diving behaviour
-boundary_thresh = 100 # Filter tracks with points > N outside survey boundary
+boundary_thresh = 20 # Filter tracks with points > N outside survey boundary
 thresh.use.percentage = T # Above filter becomes percentage of points outside survey area
 track_regTime = 5 # Time between fixes in minutes (match to tracks)
 bootstrap_N = 100000 # Iterations for bootstrap test
@@ -26,7 +26,7 @@ tracks.sim <- readRDS('./data/analysis_datasets/cumsum/tracks_sim.rds')
 tracks.real <- inside.survey.zone(tracks.real, threshold=boundary_thresh, add.inZone.col=T, 
                                   plot.map=F, plot.title='Real Tracks', use.percentage=thresh.use.percentage)
 tracks.sim <- inside.survey.zone(tracks.sim, threshold=boundary_thresh, add.inZone.col=T,
-                                 plot.map=F, plot.title='Simulated Tracks', use.percentage=thresh.use.percentage)
+                                 plot.map=T, plot.title='Simulated Tracks', use.percentage=thresh.use.percentage)
 # make a secondary set of simulations that don't use the area to the north
 # that wasn't sampled in 2015
 # filter all simulations that went north of -36.235 lat
@@ -247,5 +247,5 @@ print(data.frame(survey=names(tracks.real.ls),
 
 beep()
 # Save data for better plotting later
-# saveRDS(analysis.ls, './data/analysis_datasets/cumsum/simPaper_analysis.rds')
-# saveRDS(stat.tests, './data/analysis_datasets/cumsum/simPaper_stats.rds')
+saveRDS(analysis.ls, './data/analysis_datasets/cumsum/simPaper_analysis.rds')
+saveRDS(stat.tests, './data/analysis_datasets/cumsum/simPaper_stats.rds')

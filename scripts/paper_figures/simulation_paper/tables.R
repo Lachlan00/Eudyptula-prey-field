@@ -7,7 +7,7 @@ source('scripts/eudyptula.R')
 # Load penguins
 tracks.real <- readRDS('./data/analysis_datasets/cumsum/tracks_real.rds')
 # Filter tracks that leave the survey area like in previous analysis
-tracks.real <- inside.survey.zone(tracks.real, threshold=10, 
+tracks.real <- inside.survey.zone(tracks.real, threshold=20, use.percentage = T, 
                                   plot.map=F, plot.title='Real Tracks')
 
 # Tracks per year

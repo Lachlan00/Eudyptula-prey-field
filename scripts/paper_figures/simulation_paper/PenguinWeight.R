@@ -160,7 +160,7 @@ N.peng <- data.frame(x=as.factor(2015:2019),
 N.peng$label.sex <- paste0(N.peng$label,'\n(F',N.peng$f,':M',N.peng$m,')')
 
 ###########################################################
-# Use updated code for new p1 plot (revisions/peng_wts.R) #
+# Use updated code for new p1 plot (peng_wts.R) #
 ###########################################################
 # p1 <- ggplot(peng.data.norep, aes(x=as.factor(year(date)), y=diffs, fill=as.factor(toupper(sex)))) +
 #   geom_hline(yintercept = 0, color='darkred', linetype='dashed', size=.7) +
