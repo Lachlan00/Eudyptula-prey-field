@@ -130,18 +130,69 @@ for (YEAR in 2015:2019){
 }
 peng.data.norep$year <- as.factor(peng.data.norep$year)
 summary(glm(diffs ~ year*sex, data=peng.data.norep))
+
+##########################################################################################
+# Add in core foraginf rnagw
+mod.HMM <- readRDS('./data/simulations/HMM_models/HMM.rds')
+m.tracks <- mod.HMM$data
+m.tracks$state <- viterbi(mod.HMM)
+names(m.tracks)[c(1,4,5,6,7)] <- c('id','lon','lat','survey','state')
+# Filter tracks that leave the survey area like in previous analysis
+m.tracks <- inside.survey.zone(m.tracks, threshold=20, use.percentage = T,
+                               plot.map=F, plot.title='Real Tracks')
+# get only foraging state
+m.tracks <- m.tracks[m.tracks$state == 1,]
+m.tracks$survey <- as.factor(substr(m.tracks$survey,1,4))
+kde.df <- KDE_percentage(m.tracks[complete.cases(m.tracks),c('lon','lat')],
+                         levels=c(kde.per), facet=tracks[complete.cases(m.tracks),c('survey')])
+kde.df$survey <- kde.df$facet
+# find what levels are for each survey
+kernel_data.ls <- split(kde.df, kde.df$survey)
+# For each kernel data set extract the outside border and create
+# shape files from them
+kernel_poly <- list()
+for (i in 1:length(kernel_data.ls)){
+  kdata <- kernel_data.ls[[i]]
+  # Split and make into shape files
+  kdata.ls <- split(kdata, kdata$group)
+  # make polygons
+  for (j in 1:length(kdata.ls)){
+    kdata.ls[[j]] <- Polygon(cbind(kdata.ls[[j]]$x, kdata.ls[[j]]$y))
+  }
+  kernel_poly[[i]] <- SpatialPolygons(list(Polygons(kdata.ls, 1)))
+}
+names(kernel_poly) <- 2015:2019
+
+# Extract Sv from polygons
+names(krig.dfs)[2:3] <- c('lon', 'lat')
+krig.dfs <- UTM2lonlat.df(krig.dfs)
+
+# calc over
+krig.dfs.ls <- split(krig.dfs, krig.dfs$year)
+for (i in 1:length(krig.dfs.ls)){
+  dat <- data.frame(lon = krig.dfs.ls[[i]]$lon,
+                    lat = krig.dfs.ls[[i]]$lat)
+  coordinates(dat) <- ~ lon + lat
+  krig.dfs.ls[[i]]$over <- !is.na(over(dat, kernel_poly[[i]]))
+}
+krig.dfs <- do.call(rbind, krig.dfs.ls)
+
+##########################################################################################
         
 # Report numbers
 # Basic stats  test (with pseudoreplication accounted for)
 grand.mean <- mean(krig.dfs$linear)
 krig.dfs$diffs <- krig.dfs$linear - grand.mean
-p.list.Sv <- list()
+p.list.Sv.inside <- list()
+p.list.Sv.outside <- list()
 i <- 1
 message('Sv')
 for (YEAR in 2015:2019){
   message(YEAR)
-  p.list.Sv[[i]] <- wilcox.test(krig.dfs$diffs[krig.dfs$year == YEAR],0)
-  print(p.list.Sv[[i]]$p.value)
+  p.list.Sv.inside[[i]] <- wilcox.test(krig.dfs$diffs[krig.dfs$year == YEAR & krig.dfs$over],0)
+  p.list.Sv.outside[[i]] <- wilcox.test(krig.dfs$diffs[krig.dfs$year == YEAR & !krig.dfs$over],0)
+  message('inside ',p.list.Sv.inside[[i]]$p.value)
+  message('outside ',p.list.Sv.outside[[i]]$p.value)
   i <- i + 1
 }
 
@@ -177,19 +228,30 @@ N.peng$label.sex <- paste0(N.peng$label,'\n(F',N.peng$f,':M',N.peng$m,')')
 #   geom_text(data=N.peng, mapping=aes(x=x, y=y, label=paste0('N=',label.sex)), 
 #              inherit.aes = F)
 
-text.Sv <- pvalString(unlist(lapply(p.list.Sv, function(x) x$p.value)))
-text.Sv <- data.frame(x=as.factor(2015:2019), y=-2.7e-06, label=text.Sv)
+text.Sv.inside <- pvalString(unlist(lapply(p.list.Sv.inside, function(x) round(x$p.value,2))))
+text.Sv.inside <- data.frame(x=as.factor(2015:2019), y=-3e-06, label=text.Sv.inside, over='Inside')
+text.Sv.outside <- pvalString(unlist(lapply(p.list.Sv.outside, function(x) round(x$p.value,2))))
+text.Sv.outside <- data.frame(x=as.factor(2015:2019), y=-3e-06, label=text.Sv.outside,  over='Outside')
+text.Sv <- rbind(text.Sv.inside, text.Sv.outside)
+text.Sv$x <- c(1:5 - .18, 1:5 + .18)
 
-p2 <- ggplot(krig.dfs, aes(x=as.factor(year), y=diffs)) +
+
+bool <- krig.dfs$over
+krig.dfs$over[bool] <- 'Inside'
+krig.dfs$over[!bool] <- 'Outside'
+
+p2 <- ggplot(krig.dfs, aes(x=as.factor(year), y=diffs, fill=over)) +
   geom_hline(yintercept = 0, color='darkred', linetype='dashed', size=.7) +
-  geom_boxplot(fill='grey', alpha=.6) +#, outlier.shape = NA) +
+  geom_boxplot(alpha=.6, outlier.shape = NA) +
   labs(x=NULL, y='Sv mean anomaly (linear)', fill="Sex") +
   theme_bw() + grids(linetype = "dashed") +
   theme(text = element_text(size=18)) +
-  theme(legend.position = "none") +
-  ylim(-2.75e-06, 1.3e-06) +
-  geom_label(data=text.Sv, mapping=aes(x=x, y=y, label=label), 
-             inherit.aes = F, fill='grey', alpha=.6)
+  theme(legend.position = "top") +
+  coord_cartesian(ylim = c(-3.5e-6, 3.3e-5)) +
+  #lims(y=c(-3e-6, 3e-6)) +
+  geom_label(data=text.Sv, mapping=aes(x=x, y=y, label=label, fill=over), 
+             inherit.aes = F, alpha=.6) +
+  guides(label='none')
 
 p3 <- ggarrange(p1, p2, ncol=1, common.legend = T)
 

@@ -71,12 +71,12 @@ KDE_percentage <- function(xy, levels=c(25, 50, 75), facet=NULL, plot=F){
 
 # Testing
 # set.seed(420)
-# N = 100
+# N = 200
 # df <- data.frame(lon=rnorm(N, mean=50, sd=25),
 #                  lat = c(rnorm(N/2, mean=40, sd=15),
 #                        rnorm(N/2, mean=60, sd=15)),
 #                  state = rep(c('a','b'), each=N/2))
 # 
-# KDE_percentage(df[,c('lon','lat')], levels=c(75, 50, 90), plot=T)
+# KDE_percentage(df[,c('lon','lat')], levels=c(75, 50, 90, 20), plot=T)
 # KDE_percentage(df[,c('lon','lat')], levels=c(10, 30, 50, 70), facet=df$state, plot=T)
               
